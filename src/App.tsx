@@ -7,6 +7,22 @@ import { getAll, get5First, getRedGoods } from './api/goods';
 
 export const App: React.FC = () => {
   const [visibleGoods, setVisibleGoods] = useState<Good[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadGoods = async (loader: () => Promise<Good[]>) => {
+    try {
+      setError(null);
+      const goods = await loader();
+
+      setVisibleGoods(goods);
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('Unknown error occurred');
+      }
+    }
+  };
 
   return (
     <div className="App">
@@ -15,9 +31,7 @@ export const App: React.FC = () => {
       <button
         type="button"
         data-cy="all-button"
-        onClick={() => {
-          getAll().then(setVisibleGoods);
-        }}
+        onClick={() => loadGoods(getAll)}
       >
         Load all goods
       </button>
@@ -25,9 +39,7 @@ export const App: React.FC = () => {
       <button
         type="button"
         data-cy="first-five-button"
-        onClick={() => {
-          get5First().then(setVisibleGoods);
-        }}
+        onClick={() => loadGoods(get5First)}
       >
         Load 5 first goods
       </button>
@@ -35,12 +47,16 @@ export const App: React.FC = () => {
       <button
         type="button"
         data-cy="red-button"
-        onClick={() => {
-          getRedGoods().then(setVisibleGoods);
-        }}
+        onClick={() => loadGoods(getRedGoods)}
       >
         Load red goods
       </button>
+
+      {error && (
+        <p role="alert" style={{ color: 'red' }}>
+          {error}
+        </p>
+      )}
 
       <GoodsList goods={visibleGoods} />
     </div>
